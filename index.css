@@ -1,0 +1,58 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  --color-accent: var(--accent-color, #a855f7);
+  --color-complementary: var(--complementary-color, #f59e0b);
+  --color-complementary-contrast: var(--complementary-contrast, #ffffff);
+  
+  /* Map all non-monochrome colors to the accent color as requested */
+  --color-red-50: var(--accent-color); --color-red-100: var(--accent-color); --color-red-200: var(--accent-color); --color-red-300: var(--accent-color); --color-red-400: var(--accent-color); --color-red-500: var(--accent-color); --color-red-600: var(--accent-color); --color-red-700: var(--accent-color); --color-red-800: var(--accent-color); --color-red-900: var(--accent-color); --color-red-950: var(--accent-color);
+  --color-orange-50: var(--accent-color); --color-orange-100: var(--accent-color); --color-orange-200: var(--accent-color); --color-orange-300: var(--accent-color); --color-orange-400: var(--accent-color); --color-orange-500: var(--accent-color); --color-orange-600: var(--accent-color); --color-orange-700: var(--accent-color); --color-orange-800: var(--accent-color); --color-orange-900: var(--accent-color); --color-orange-950: var(--accent-color);
+  --color-amber-50: var(--accent-color); --color-amber-100: var(--accent-color); --color-amber-200: var(--accent-color); --color-amber-300: var(--accent-color); --color-amber-400: var(--accent-color); --color-amber-500: var(--accent-color); --color-amber-600: var(--accent-color); --color-amber-700: var(--accent-color); --color-amber-800: var(--accent-color); --color-amber-900: var(--accent-color); --color-amber-950: var(--accent-color);
+  --color-yellow-50: var(--accent-color); --color-yellow-100: var(--accent-color); --color-yellow-200: var(--accent-color); --color-yellow-300: var(--accent-color); --color-yellow-400: var(--accent-color); --color-yellow-500: var(--accent-color); --color-yellow-600: var(--accent-color); --color-yellow-700: var(--accent-color); --color-yellow-800: var(--accent-color); --color-yellow-900: var(--accent-color); --color-yellow-950: var(--accent-color);
+  --color-lime-50: var(--accent-color); --color-lime-100: var(--accent-color); --color-lime-200: var(--accent-color); --color-lime-300: var(--accent-color); --color-lime-400: var(--accent-color); --color-lime-500: var(--accent-color); --color-lime-600: var(--accent-color); --color-lime-700: var(--accent-color); --color-lime-800: var(--accent-color); --color-lime-900: var(--accent-color); --color-lime-950: var(--accent-color);
+  --color-green-50: var(--accent-color); --color-green-100: var(--accent-color); --color-green-200: var(--accent-color); --color-green-300: var(--accent-color); --color-green-400: var(--accent-color); --color-green-500: var(--accent-color); --color-green-600: var(--accent-color); --color-green-700: var(--accent-color); --color-green-800: var(--accent-color); --color-green-900: var(--accent-color); --color-green-950: var(--accent-color);
+  --color-emerald-50: var(--accent-color); --color-emerald-100: var(--accent-color); --color-emerald-200: var(--accent-color); --color-emerald-300: var(--accent-color); --color-emerald-400: var(--accent-color); --color-emerald-500: var(--accent-color); --color-emerald-600: var(--accent-color); --color-emerald-700: var(--accent-color); --color-emerald-800: var(--accent-color); --color-emerald-900: var(--accent-color); --color-emerald-950: var(--accent-color);
+  --color-teal-50: var(--accent-color); --color-teal-100: var(--accent-color); --color-teal-200: var(--accent-color); --color-teal-300: var(--accent-color); --color-teal-400: var(--accent-color); --color-teal-500: var(--accent-color); --color-teal-600: var(--accent-color); --color-teal-700: var(--accent-color); --color-teal-800: var(--accent-color); --color-teal-900: var(--accent-color); --color-teal-950: var(--accent-color);
+  --color-cyan-50: var(--accent-color); --color-cyan-100: var(--accent-color); --color-cyan-200: var(--accent-color); --color-cyan-300: var(--accent-color); --color-cyan-400: var(--accent-color); --color-cyan-500: var(--accent-color); --color-cyan-600: var(--accent-color); --color-cyan-700: var(--accent-color); --color-cyan-800: var(--accent-color); --color-cyan-900: var(--accent-color); --color-cyan-950: var(--accent-color);
+  --color-sky-50: var(--accent-color); --color-sky-100: var(--accent-color); --color-sky-200: var(--accent-color); --color-sky-300: var(--accent-color); --color-sky-400: var(--accent-color); --color-sky-500: var(--accent-color); --color-sky-600: var(--accent-color); --color-sky-700: var(--accent-color); --color-sky-800: var(--accent-color); --color-sky-900: var(--accent-color); --color-sky-950: var(--accent-color);
+  --color-blue-50: var(--accent-color); --color-blue-100: var(--accent-color); --color-blue-200: var(--accent-color); --color-blue-300: var(--accent-color); --color-blue-400: var(--accent-color); --color-blue-500: var(--accent-color); --color-blue-600: var(--accent-color); --color-blue-700: var(--accent-color); --color-blue-800: var(--accent-color); --color-blue-900: var(--accent-color); --color-blue-950: var(--accent-color);
+  --color-indigo-50: var(--accent-color); --color-indigo-100: var(--accent-color); --color-indigo-200: var(--accent-color); --color-indigo-300: var(--accent-color); --color-indigo-400: var(--accent-color); --color-indigo-500: var(--accent-color); --color-indigo-600: var(--accent-color); --color-indigo-700: var(--accent-color); --color-indigo-800: var(--accent-color); --color-indigo-900: var(--accent-color); --color-indigo-950: var(--accent-color);
+  --color-violet-50: var(--accent-color); --color-violet-100: var(--accent-color); --color-violet-200: var(--accent-color); --color-violet-300: var(--accent-color); --color-violet-400: var(--accent-color); --color-violet-500: var(--accent-color); --color-violet-600: var(--accent-color); --color-violet-700: var(--accent-color); --color-violet-800: var(--accent-color); --color-violet-900: var(--accent-color); --color-violet-950: var(--accent-color);
+  --color-purple-50: var(--accent-color); --color-purple-100: var(--accent-color); --color-purple-200: var(--accent-color); --color-purple-300: var(--accent-color); --color-purple-400: var(--accent-color); --color-purple-500: var(--accent-color); --color-purple-600: var(--accent-color); --color-purple-700: var(--accent-color); --color-purple-800: var(--accent-color); --color-purple-900: var(--accent-color); --color-purple-950: var(--accent-color);
+  --color-fuchsia-50: var(--accent-color); --color-fuchsia-100: var(--accent-color); --color-fuchsia-200: var(--accent-color); --color-fuchsia-300: var(--accent-color); --color-fuchsia-400: var(--accent-color); --color-fuchsia-500: var(--accent-color); --color-fuchsia-600: var(--accent-color); --color-fuchsia-700: var(--accent-color); --color-fuchsia-800: var(--accent-color); --color-fuchsia-900: var(--accent-color); --color-fuchsia-950: var(--accent-color);
+  --color-pink-50: var(--accent-color); --color-pink-100: var(--accent-color); --color-pink-200: var(--accent-color); --color-pink-300: var(--accent-color); --color-pink-400: var(--accent-color); --color-pink-500: var(--accent-color); --color-pink-600: var(--accent-color); --color-pink-700: var(--accent-color); --color-pink-800: var(--accent-color); --color-pink-900: var(--accent-color); --color-pink-950: var(--accent-color);
+  --color-rose-50: var(--accent-color); --color-rose-100: var(--accent-color); --color-rose-200: var(--accent-color); --color-rose-300: var(--accent-color); --color-rose-400: var(--accent-color); --color-rose-500: var(--accent-color); --color-rose-600: var(--accent-color); --color-rose-700: var(--accent-color); --color-rose-800: var(--accent-color); --color-rose-900: var(--accent-color); --color-rose-950: var(--accent-color);
+}
+
+@layer base {
+  body {
+    @apply bg-black text-white;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-zinc-800 rounded-full;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    @apply bg-zinc-700;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}

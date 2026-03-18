@@ -1,0 +1,7 @@
+{
+  "name": "Shelf.ai",
+  "description": "A mobile-first AI meal planner and pantry manager that helps you scan groceries, track dietary goals, and reduce food waste.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
