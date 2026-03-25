@@ -79,3 +79,12 @@ export interface MealGenerationParams {
 }
 
 export type TabType = 'home' | 'pantry' | 'cook' | 'settings' | 'help';
+
+export interface SubscriptionState {
+  isSubscribed: boolean;
+  subscriptionStartDate: number | null;
+  subscriptionEndDate: number | null;
+  trialUsed: boolean;
+  dailyUsageCount: number;
+  lastUsageDate: string; // YYYY-MM-DD
+}

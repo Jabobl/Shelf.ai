@@ -49,7 +49,7 @@ const Onboarding = memo(function Onboarding({ onComplete, onSkipAll, theme }: On
     options: { label: string; value: any }[]
   ) => (
     <div className="mb-6">
-      <label className={`block text-sm font-bold uppercase tracking-widest mb-3 ${theme === 'dark' ? 'text-zinc-500' : 'text-black'}`}>{label}</label>
+      <label className={`block text-sm font-bold uppercase tracking-widest mb-3 ${theme === 'dark' ? 'text-zinc-500' : 'text-zinc-400'}`}>{label}</label>
       <div className="space-y-2">
         {options.map(opt => {
           const isSelected = preferences[key] === opt.value;
@@ -59,8 +59,8 @@ const Onboarding = memo(function Onboarding({ onComplete, onSkipAll, theme }: On
               onClick={() => updatePref(key, opt.value)}
               className={`w-full flex items-center justify-between p-5 rounded-2xl border transition-all ${
                 isSelected 
-                  ? `bg-[var(--complementary-color)] border-[var(--complementary-color)] ${theme === 'dark' ? 'text-white' : 'text-black'} shadow-lg shadow-accent/40` 
-                  : theme === 'dark' ? 'bg-zinc-950 border-zinc-900 text-zinc-400 hover:border-zinc-800 hover:bg-zinc-900' : 'bg-white border-zinc-200 text-black hover:bg-zinc-100'
+                  ? `bg-accent border-accent text-white shadow-lg shadow-accent/40` 
+                  : theme === 'dark' ? 'bg-zinc-950 border-zinc-900 text-zinc-400 hover:border-zinc-800 hover:bg-zinc-900' : 'bg-white border-zinc-200 text-black hover:bg-zinc-50'
               }`}
             >
               <span className="font-semibold text-lg">{opt.label}</span>
@@ -78,7 +78,7 @@ const Onboarding = memo(function Onboarding({ onComplete, onSkipAll, theme }: On
     options: { label: string; value: string }[]
   ) => (
     <div className="mb-6">
-      <label className={`block text-sm font-bold uppercase tracking-widest mb-3 ${theme === 'dark' ? 'text-zinc-500' : 'text-black'}`}>{label}</label>
+      <label className={`block text-sm font-bold uppercase tracking-widest mb-3 ${theme === 'dark' ? 'text-zinc-500' : 'text-zinc-400'}`}>{label}</label>
       <div className="grid grid-cols-2 gap-2">
         {options.map(opt => {
           const isSelected = (preferences[key] as string[]).includes(opt.value);
@@ -94,8 +94,8 @@ const Onboarding = memo(function Onboarding({ onComplete, onSkipAll, theme }: On
               }}
               className={`flex items-center justify-center p-4 rounded-xl border transition-all ${
                 isSelected 
-                  ? `bg-[var(--complementary-color)] border-[var(--complementary-color)] ${theme === 'dark' ? 'text-white' : 'text-black'}` 
-                  : theme === 'dark' ? 'bg-zinc-950 border-zinc-900 text-zinc-400 hover:border-zinc-800' : 'bg-white border-zinc-200 text-black'
+                  ? `bg-accent border-accent text-white` 
+                  : theme === 'dark' ? 'bg-zinc-950 border-zinc-900 text-zinc-400 hover:border-zinc-800' : 'bg-white border-zinc-200 text-black hover:bg-zinc-50'
               }`}
             >
               <span className="font-medium text-sm">{opt.label}</span>
@@ -113,12 +113,12 @@ const Onboarding = memo(function Onboarding({ onComplete, onSkipAll, theme }: On
         onClick={() => updatePref(key, !isChecked)}
         className={`w-full flex items-center justify-between p-5 rounded-2xl border mb-4 transition-all ${
           isChecked 
-            ? `bg-[var(--complementary-color)] border-[var(--complementary-color)] ${theme === 'dark' ? 'text-white' : 'text-black'} shadow-lg shadow-accent/40` 
-            : theme === 'dark' ? 'bg-zinc-950 border-zinc-900 text-zinc-400 hover:border-zinc-800 hover:bg-zinc-900' : 'bg-white border-zinc-200 text-black hover:bg-zinc-100'
+            ? `bg-accent border-accent text-white shadow-lg shadow-accent/40` 
+            : theme === 'dark' ? 'bg-zinc-950 border-zinc-900 text-zinc-400 hover:border-zinc-800 hover:bg-zinc-900' : 'bg-white border-zinc-200 text-black hover:bg-zinc-50'
         }`}
       >
         <span className="font-semibold text-lg">{label}</span>
-        <div className={`w-12 h-6 rounded-full transition-colors relative ${isChecked ? 'bg-white/20' : 'bg-zinc-800'}`}>
+        <div className={`w-12 h-6 rounded-full transition-colors relative ${isChecked ? 'bg-white/20' : theme === 'dark' ? 'bg-zinc-800' : 'bg-zinc-200'}`}>
           <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${isChecked ? 'left-7' : 'left-1'}`} />
         </div>
       </button>
@@ -170,7 +170,7 @@ const Onboarding = memo(function Onboarding({ onComplete, onSkipAll, theme }: On
       content: (
         <div className="space-y-6">
           <div>
-            <label className={`block text-sm font-bold uppercase tracking-widest mb-3 ${theme === 'dark' ? 'text-zinc-500' : 'text-black'}`}>Calories per day</label>
+            <label className={`block text-sm font-bold uppercase tracking-widest mb-3 ${theme === 'dark' ? 'text-zinc-500' : 'text-zinc-400'}`}>Calories per day</label>
             <input 
               type="number" 
               placeholder="e.g. 2000"
@@ -234,14 +234,14 @@ const Onboarding = memo(function Onboarding({ onComplete, onSkipAll, theme }: On
           ) : (
             <button 
               onClick={handleBack}
-              className="p-2 -ml-2 text-zinc-400 hover:text-white transition-colors rounded-full hover:bg-zinc-900"
+              className={`p-2 -ml-2 transition-colors rounded-full ${theme === 'dark' ? 'text-zinc-400 hover:text-white hover:bg-zinc-900' : 'text-zinc-500 hover:text-black hover:bg-zinc-100'}`}
             >
               <ChevronLeft size={24} />
             </button>
           )}
           <button 
             onClick={handleNext}
-            className="text-sm font-bold text-zinc-500 hover:text-zinc-300 transition-colors"
+            className={`text-sm font-bold transition-colors ${theme === 'dark' ? 'text-zinc-500 hover:text-zinc-300' : 'text-zinc-400 hover:text-zinc-600'}`}
           >
             Skip
           </button>
@@ -265,7 +265,7 @@ const Onboarding = memo(function Onboarding({ onComplete, onSkipAll, theme }: On
               className="absolute inset-0 flex flex-col"
             >
             <h2 className={`text-3xl font-bold mb-2 tracking-tight ${theme === 'dark' ? 'text-white' : 'text-black'}`}>{steps[step].title}</h2>
-              <p className={`text-zinc-500 mb-10 text-lg leading-relaxed ${theme === 'light' ? 'text-black' : ''}`}>{steps[step].description}</p>
+              <p className={`mb-10 text-lg leading-relaxed ${theme === 'dark' ? 'text-zinc-500' : 'text-zinc-600'}`}>{steps[step].description}</p>
               <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar">
                 {steps[step].content}
               </div>

@@ -6,6 +6,9 @@ import { EditItemModal, FilterSortModal, LeftoversModal } from './components/Pan
 import { RecipeStep } from './components/RecipeStep';
 import { PantryItem, Meal, TabType, UserPreferences, DEFAULT_PREFERENCES, SortOption, FilterCriteria, MealGenerationParams } from './types';
 import { gemini } from './services/geminiService';
+import { useSubscription } from './contexts/SubscriptionContext';
+import { PaywallModal } from './components/PaywallModal';
+import { UsageLimitBanner } from './components/UsageLimitBanner';
 import Onboarding from './components/Onboarding';
 import Settings from './components/Settings';
 import AddItemModal from './components/AddItemModal';
@@ -18,6 +21,28 @@ import HelpView from './components/HelpView';
 const INITIAL_PANTRY: PantryItem[] = [];
 
 const TABS_ORDER: TabType[] = ['home', 'pantry', 'cook', 'settings'];
+
+const tabVariants = {
+  enter: (direction: number) => ({
+    x: direction > 0 ? '100%' : '-100%',
+    opacity: 0,
+  }),
+  center: {
+    zIndex: 1,
+    x: 0,
+    opacity: 1,
+  },
+  exit: (direction: number) => ({
+    zIndex: 0,
+    x: direction < 0 ? '100%' : '-100%',
+    opacity: 0,
+  }),
+};
+
+const swipeConfidenceThreshold = 10000;
+const swipePower = (offset: number, velocity: number) => {
+  return Math.abs(offset) * velocity;
+};
 
 function getComplementaryColor(hex: string): string {
   // Remove # if present
@@ -79,6 +104,7 @@ declare global {
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<TabType>('home');
+  const [direction, setDirection] = useState(0);
   const [pantry, setPantry] = useState<PantryItem[]>(INITIAL_PANTRY);
   const [isScanning, setIsScanning] = useState(false);
   const [isResearching, setIsResearching] = useState(false);
@@ -97,6 +123,10 @@ export default function App() {
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [leftoversToIdentify, setLeftoversToIdentify] = useState<Partial<PantryItem>[]>([]);
   const [isTabDragDisabled, setIsTabDragDisabled] = useState(false);
+  const [isPaywallOpen, setIsPaywallOpen] = useState(false);
+
+  // Subscription Hook
+  const { canGenerateRecipe, incrementUsage, authLoading, user, isSubscribed } = useSubscription();
 
   // Meal Generation Questionnaire State
   const [mealGenStep, setMealGenStep] = useState<number>(0);
@@ -149,20 +179,29 @@ export default function App() {
     dialRef.current.scrollTop = scrollTop.current - walk;
   }, []);
 
-  const handleSwipe = useCallback((direction: 'left' | 'right') => {
+  const handleTabChange = useCallback((newTab: TabType) => {
+    const currentIndex = TABS_ORDER.indexOf(activeTab);
+    const newIndex = TABS_ORDER.indexOf(newTab);
+    if (currentIndex !== -1 && newIndex !== -1) {
+      setDirection(newIndex > currentIndex ? 1 : -1);
+    }
+    setActiveTab(newTab);
+  }, [activeTab]);
+
+  const handleSwipe = useCallback((swipeDirection: 'left' | 'right') => {
     const currentIndex = TABS_ORDER.indexOf(activeTab);
     if (currentIndex === -1) return;
 
-    if (direction === 'left') {
+    if (swipeDirection === 'left') {
       if (currentIndex < TABS_ORDER.length - 1) {
-        setActiveTab(TABS_ORDER[currentIndex + 1]);
+        handleTabChange(TABS_ORDER[currentIndex + 1]);
       }
     } else {
       if (currentIndex > 0) {
-        setActiveTab(TABS_ORDER[currentIndex - 1]);
+        handleTabChange(TABS_ORDER[currentIndex - 1]);
       }
     }
-  }, [activeTab]);
+  }, [activeTab, handleTabChange]);
 
   // Persistence
   useEffect(() => {
@@ -411,6 +450,12 @@ export default function App() {
       setPantryError("Your pantry is empty! Add some ingredients first so Shelf AI can suggest a recipe.");
       return;
     }
+
+    if (!canGenerateRecipe()) {
+      setIsPaywallOpen(true);
+      return;
+    }
+
     if (!hasApiKey) {
       await handleOpenKeyDialog();
     }
@@ -422,6 +467,7 @@ export default function App() {
         setGeneratedMeals(timestampedMeals);
         setMealHistory(prev => [...timestampedMeals, ...prev].slice(0, 50)); // Keep last 50
         setMealGenStep(100);
+        incrementUsage();
       }
     } catch (error) {
       console.error("Meal generation error:", error);
@@ -464,6 +510,17 @@ export default function App() {
       }, {} as Record<string, PantryItem[]>);
   }, [pantry, filterCriteria, sortOption]);
 
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-[#050505] flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 text-[#F27D26] animate-spin mx-auto mb-4" />
+          <p className="text-white/60 font-medium tracking-wider uppercase text-xs">Initializing Shelf.ai</p>
+        </div>
+      </div>
+    );
+  }
+
   if (hasCompletedOnboarding === false) {
     return <Onboarding onComplete={handleOnboardingComplete} onSkipAll={handleSkipAll} theme={theme} />;
   }
@@ -476,90 +533,114 @@ export default function App() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className={`text-2xl font-bold tracking-tight ${theme === 'dark' ? 'text-white' : 'text-black'}`}>Shelf.ai</h1>
-              <p className={`text-sm font-medium ${theme === 'dark' ? 'text-accent/60' : 'text-black'}`}>Smart kitchen companion</p>
+              <p className="text-sm font-medium text-accent/60">Smart kitchen companion</p>
             </div>
           </div>
         </header>
       )}
 
       {/* Main Content Area */}
-      <motion.main 
-        drag="x"
-        dragConstraints={{ left: 0, right: 0 }}
-        dragElastic={0.2}
-        onDragEnd={(_, info) => {
-          const threshold = 50;
-          if (info.offset.x < -threshold) handleSwipe('left');
-          else if (info.offset.x > threshold) handleSwipe('right');
-        }}
-        className="flex-1 overflow-y-auto pb-24 relative"
-      >
-        {activeTab === 'settings' && (
-          <Settings 
-            preferences={preferences} 
-            onSave={setPreferences} 
-            onBack={() => setActiveTab('home')} 
-            onReset={handleResetPreferences}
-            theme={theme}
-            setTheme={setTheme}
-            onHelp={() => setActiveTab('help')}
-          />
-        )}
-        {activeTab === 'home' && (
-          <HomeView 
-            theme={theme}
-            generatedMeals={generatedMeals}
-            savedRecipes={savedRecipes}
-            pantryCount={pantry.length}
-            weeklyHistory={weeklyHistory}
-            weeklyStats={weeklyStats}
-            setActiveTab={setActiveTab}
-            setSelectedMeal={setSelectedMeal}
-          />
-        )}
+      <main className="flex-1 relative overflow-hidden">
+        <AnimatePresence initial={false} custom={direction} mode="popLayout">
+          <motion.div
+            key={activeTab}
+            custom={direction}
+            variants={tabVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{
+              x: { type: "spring", stiffness: 300, damping: 30 },
+              opacity: { duration: 0.2 }
+            }}
+            drag={isTabDragDisabled ? false : "x"}
+            dragConstraints={{ left: 0, right: 0 }}
+            dragElastic={1}
+            onDragEnd={(e, { offset, velocity }) => {
+              const swipe = swipePower(offset.x, velocity.x);
+              if (swipe < -swipeConfidenceThreshold) {
+                handleSwipe('left');
+              } else if (swipe > swipeConfidenceThreshold) {
+                handleSwipe('right');
+              }
+            }}
+            className="absolute inset-0 overflow-y-auto pb-24 px-0"
+          >
+            {activeTab === 'settings' && (
+              <Settings 
+                preferences={preferences} 
+                onSave={setPreferences} 
+                onBack={() => handleTabChange('home')} 
+                onReset={handleResetPreferences}
+                theme={theme}
+                setTheme={setTheme}
+                onHelp={() => handleTabChange('help')}
+                onUpgrade={() => setIsPaywallOpen(true)}
+              />
+            )}
+            {activeTab === 'home' && (
+              <>
+                {!isSubscribed && <UsageLimitBanner theme={theme} onUpgrade={() => setIsPaywallOpen(true)} />}
+                <HomeView 
+                  theme={theme}
+                  generatedMeals={generatedMeals}
+                  savedRecipes={savedRecipes}
+                  pantryCount={pantry.length}
+                  weeklyHistory={weeklyHistory}
+                  weeklyStats={weeklyStats}
+                  setActiveTab={handleTabChange}
+                  setSelectedMeal={setSelectedMeal}
+                />
+              </>
+            )}
 
-        {activeTab === 'pantry' && (
-          <PantryView 
-            theme={theme}
-            isScanning={isScanning}
-            groupedPantry={groupedPantry}
-            collapsedCategories={collapsedCategories}
-            setIsFilterModalOpen={setIsFilterModalOpen}
-            setIsAddItemModalOpen={setIsAddItemModalOpen}
-            toggleCategoryCollapse={toggleCategoryCollapse}
-            setEditingItem={setEditingItem}
-          />
-        )}
+            {activeTab === 'pantry' && (
+              <PantryView 
+                theme={theme}
+                preferences={preferences}
+                isScanning={isScanning}
+                groupedPantry={groupedPantry}
+                collapsedCategories={collapsedCategories}
+                setIsFilterModalOpen={setIsFilterModalOpen}
+                setIsAddItemModalOpen={setIsAddItemModalOpen}
+                toggleCategoryCollapse={toggleCategoryCollapse}
+                setEditingItem={setEditingItem}
+              />
+            )}
 
-        {activeTab === 'cook' && (
-          <CookView 
-            theme={theme}
-            preferences={preferences}
-            mealGenStep={mealGenStep}
-            mealGenParams={mealGenParams}
-            isPlanLoading={isPlanLoading}
-            generatedMeals={generatedMeals}
-            setMealGenStep={setMealGenStep}
-            setMealGenParams={setMealGenParams}
-            handleGenerateSingleMeal={handleGenerateSingleMeal}
-            setSelectedMeal={setSelectedMeal}
-            dialRef={dialRef}
-            handleMouseDown={handleMouseDown}
-            handleMouseLeave={handleMouseLeave}
-            handleMouseUp={handleMouseUp}
-            handleMouseMove={handleMouseMove}
-            setIsTabDragDisabled={setIsTabDragDisabled}
-          />
-        )}
+            {activeTab === 'cook' && (
+              <>
+                {!isSubscribed && <UsageLimitBanner theme={theme} onUpgrade={() => setIsPaywallOpen(true)} />}
+                <CookView 
+                  theme={theme}
+                  preferences={preferences}
+                  mealGenStep={mealGenStep}
+                  mealGenParams={mealGenParams}
+                  isPlanLoading={isPlanLoading}
+                  generatedMeals={generatedMeals}
+                  setMealGenStep={setMealGenStep}
+                  setMealGenParams={setMealGenParams}
+                  handleGenerateSingleMeal={handleGenerateSingleMeal}
+                  setSelectedMeal={setSelectedMeal}
+                  dialRef={dialRef}
+                  handleMouseDown={handleMouseDown}
+                  handleMouseLeave={handleMouseLeave}
+                  handleMouseUp={handleMouseUp}
+                  handleMouseMove={handleMouseMove}
+                  setIsTabDragDisabled={setIsTabDragDisabled}
+                />
+              </>
+            )}
 
-        {activeTab === 'help' && (
-          <HelpView 
-            theme={theme}
-            setActiveTab={setActiveTab}
-          />
-        )}
-
-      </motion.main>
+            {activeTab === 'help' && (
+              <HelpView 
+                theme={theme}
+                setActiveTab={handleTabChange}
+              />
+            )}
+          </motion.div>
+        </AnimatePresence>
+      </main>
 
       {/* Bottom Nav */}
       <motion.nav 
@@ -573,8 +654,8 @@ export default function App() {
         }}
         className={`fixed bottom-0 left-0 right-0 max-w-md mx-auto backdrop-blur-md border-t safe-bottom px-6 py-3 flex justify-between items-center z-50 transition-colors duration-300 ${theme === 'dark' ? 'bg-black/80 border-zinc-900' : 'bg-white/80 border-zinc-200'}`}
       >
-        <NavButton active={activeTab === 'home'} icon={<Home size={22} />} label="Home" onClick={() => setActiveTab('home')} />
-        <NavButton active={activeTab === 'pantry'} icon={<Refrigerator size={22} />} label="Pantry" onClick={() => setActiveTab('pantry')} />
+        <NavButton active={activeTab === 'home'} icon={<Home size={22} />} label="Home" onClick={() => handleTabChange('home')} />
+        <NavButton active={activeTab === 'pantry'} icon={<Refrigerator size={22} />} label="Pantry" onClick={() => handleTabChange('pantry')} />
         <NavButton 
           active={activeTab === 'cook'} 
           icon={
@@ -587,9 +668,9 @@ export default function App() {
             </svg>
           } 
           label="Cook" 
-          onClick={() => setActiveTab('cook')} 
+          onClick={() => handleTabChange('cook')} 
         />
-        <NavButton active={activeTab === 'settings'} icon={<SettingsIcon size={22} />} label="Settings" onClick={() => setActiveTab('settings')} />
+        <NavButton active={activeTab === 'settings'} icon={<SettingsIcon size={22} />} label="Settings" onClick={() => handleTabChange('settings')} />
       </motion.nav>
 
       {/* Settings Modal (Pop up) - Removed as it's now a tab */}
@@ -615,7 +696,7 @@ export default function App() {
               </div>
               <div className="space-y-2">
                 <h3 className={`text-lg font-bold ${theme === 'dark' ? 'text-white' : 'text-black'}`}>Empty Pantry</h3>
-                <p className={`text-sm leading-relaxed ${theme === 'dark' ? 'text-zinc-500' : 'text-black'}`}>{pantryError}</p>
+                <p className={`text-sm leading-relaxed ${theme === 'dark' ? 'text-zinc-500' : 'text-zinc-600'}`}>{pantryError}</p>
               </div>
               <button 
                 onClick={() => setPantryError(null)}
@@ -645,6 +726,12 @@ export default function App() {
         onSortChange={setSortOption}
         filterCriteria={filterCriteria}
         onFilterChange={setFilterCriteria}
+        theme={theme}
+      />
+
+      <PaywallModal 
+        isOpen={isPaywallOpen}
+        onClose={() => setIsPaywallOpen(false)}
         theme={theme}
       />
 
@@ -683,7 +770,7 @@ export default function App() {
                 </button>
                 <button 
                   onClick={() => setSelectedMeal(null)}
-                  className={`p-2 rounded-full transition-colors ${theme === 'dark' ? 'bg-zinc-800 text-zinc-400 hover:text-white' : 'bg-zinc-100 text-black hover:text-black'}`}
+                  className={`p-2 rounded-full transition-colors ${theme === 'dark' ? 'bg-zinc-800 text-zinc-400 hover:text-white' : 'bg-zinc-100 text-zinc-500 hover:text-black'}`}
                 >
                   <X size={24} />
                 </button>
@@ -692,29 +779,29 @@ export default function App() {
 
             <div className="space-y-6 overflow-y-auto max-h-[60vh] pr-2 custom-scrollbar">
               <section>
-                <h4 className={`text-sm font-bold uppercase tracking-widest mb-3 ${theme === 'dark' ? 'text-zinc-500' : 'text-black'}`}>Nutrition</h4>
+                <h4 className={`text-sm font-bold uppercase tracking-widest mb-3 ${theme === 'dark' ? 'text-zinc-500' : 'text-zinc-400'}`}>Nutrition</h4>
                 <div className="grid grid-cols-4 gap-4">
                   <div className={`p-3 rounded-xl border text-center ${theme === 'dark' ? 'bg-zinc-950 border-zinc-800' : 'bg-zinc-50 border-zinc-100'}`}>
-                    <p className={`text-[10px] font-bold uppercase ${theme === 'dark' ? 'text-zinc-600' : 'text-black'}`}>Cal</p>
+                    <p className={`text-[10px] font-bold uppercase ${theme === 'dark' ? 'text-zinc-600' : 'text-zinc-400'}`}>Cal</p>
                     <p className="text-sm font-bold text-accent">{selectedMeal.calories}</p>
                   </div>
                   <div className={`p-3 rounded-xl border text-center ${theme === 'dark' ? 'bg-zinc-950 border-zinc-800' : 'bg-zinc-50 border-zinc-100'}`}>
-                    <p className={`text-[10px] font-bold uppercase ${theme === 'dark' ? 'text-zinc-600' : 'text-black'}`}>Pro</p>
-                    <p className={`text-sm font-bold ${theme === 'dark' ? 'text-zinc-200' : 'text-black'}`}>{selectedMeal.protein}g</p>
+                    <p className={`text-[10px] font-bold uppercase ${theme === 'dark' ? 'text-zinc-600' : 'text-zinc-400'}`}>Pro</p>
+                    <p className={`text-sm font-bold ${theme === 'dark' ? 'text-zinc-200' : 'text-zinc-700'}`}>{selectedMeal.protein}g</p>
                   </div>
                   <div className={`p-3 rounded-xl border text-center ${theme === 'dark' ? 'bg-zinc-950 border-zinc-800' : 'bg-zinc-50 border-zinc-100'}`}>
-                    <p className={`text-[10px] font-bold uppercase ${theme === 'dark' ? 'text-zinc-600' : 'text-black'}`}>Carb</p>
-                    <p className={`text-sm font-bold ${theme === 'dark' ? 'text-zinc-200' : 'text-black'}`}>{selectedMeal.carbs}g</p>
+                    <p className={`text-[10px] font-bold uppercase ${theme === 'dark' ? 'text-zinc-600' : 'text-zinc-400'}`}>Carb</p>
+                    <p className={`text-sm font-bold ${theme === 'dark' ? 'text-zinc-200' : 'text-zinc-700'}`}>{selectedMeal.carbs}g</p>
                   </div>
                   <div className={`p-3 rounded-xl border text-center ${theme === 'dark' ? 'bg-zinc-950 border-zinc-800' : 'bg-zinc-50 border-zinc-100'}`}>
-                    <p className={`text-[10px] font-bold uppercase ${theme === 'dark' ? 'text-zinc-600' : 'text-black'}`}>Fat</p>
-                    <p className={`text-sm font-bold ${theme === 'dark' ? 'text-zinc-200' : 'text-black'}`}>{selectedMeal.fat}g</p>
+                    <p className={`text-[10px] font-bold uppercase ${theme === 'dark' ? 'text-zinc-600' : 'text-zinc-400'}`}>Fat</p>
+                    <p className={`text-sm font-bold ${theme === 'dark' ? 'text-zinc-200' : 'text-zinc-700'}`}>{selectedMeal.fat}g</p>
                   </div>
                 </div>
               </section>
 
               <section>
-                <h4 className={`text-sm font-bold uppercase tracking-widest mb-3 ${theme === 'dark' ? 'text-zinc-500' : 'text-black'}`}>Instructions</h4>
+                <h4 className={`text-sm font-bold uppercase tracking-widest mb-3 ${theme === 'dark' ? 'text-zinc-500' : 'text-zinc-400'}`}>Instructions</h4>
                 <div className="space-y-4">
                   {selectedMeal.recipe?.map((step, i) => (
                     <div key={i} className="flex gap-4">

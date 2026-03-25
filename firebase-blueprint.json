@@ -1,0 +1,64 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile and subscription metadata",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "stripeId": { "type": "string" },
+        "dailyUsageCount": { "type": "integer" },
+        "lastUsageDate": { "type": "string" }
+      },
+      "required": ["uid", "email"]
+    },
+    "CheckoutSession": {
+      "title": "Checkout Session",
+      "description": "Stripe checkout session request",
+      "type": "object",
+      "properties": {
+        "price": { "type": "string" },
+        "success_url": { "type": "string" },
+        "cancel_url": { "type": "string" },
+        "sessionId": { "type": "string" },
+        "url": { "type": "string" }
+      },
+      "required": ["price", "success_url", "cancel_url"]
+    },
+    "Subscription": {
+      "title": "Subscription",
+      "description": "Stripe subscription details",
+      "type": "object",
+      "properties": {
+        "status": { "type": "string" },
+        "price": { "type": "string" },
+        "role": { "type": "string" },
+        "current_period_end": { "type": "integer" },
+        "current_period_start": { "type": "integer" }
+      }
+    }
+  },
+  "firestore": {
+    "/users/{uid}": {
+      "schema": "User",
+      "description": "User profile"
+    },
+    "/users/{uid}/checkout_sessions/{sessionId}": {
+      "schema": "CheckoutSession",
+      "description": "Stripe checkout sessions"
+    },
+    "/users/{uid}/subscriptions/{subscriptionId}": {
+      "schema": "Subscription",
+      "description": "User subscriptions"
+    },
+    "/products/{productId}": {
+      "schema": "Product",
+      "description": "Stripe products"
+    },
+    "/products/{productId}/prices/{priceId}": {
+      "schema": "Price",
+      "description": "Stripe prices"
+    }
+  }
+}

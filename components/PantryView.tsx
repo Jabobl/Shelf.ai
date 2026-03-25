@@ -1,9 +1,10 @@
 import React, { memo } from 'react';
 import { Filter, Plus, Camera, ChevronDown, ChevronUp } from 'lucide-react';
-import { PantryItem } from '../types';
+import { PantryItem, UserPreferences } from '../types';
 
 interface PantryViewProps {
   theme: 'dark' | 'light';
+  preferences: UserPreferences;
   isScanning: boolean;
   groupedPantry: Record<string, PantryItem[]>;
   collapsedCategories: string[];
@@ -15,6 +16,7 @@ interface PantryViewProps {
 
 const PantryView: React.FC<PantryViewProps> = memo(({
   theme,
+  preferences,
   isScanning,
   groupedPantry,
   collapsedCategories,
@@ -36,7 +38,8 @@ const PantryView: React.FC<PantryViewProps> = memo(({
           </button>
           <button 
             onClick={() => setIsAddItemModalOpen(true)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-full font-semibold text-sm cursor-pointer hover:opacity-90 transition-colors shadow-lg shadow-accent/20 ${theme === 'dark' ? 'bg-accent text-white' : 'bg-accent text-black'}`}
+            className={`flex items-center gap-2 px-4 py-2 rounded-full font-semibold text-sm cursor-pointer hover:opacity-90 transition-colors shadow-lg shadow-accent/20 ${theme === 'dark' ? 'text-white' : 'text-black'}`}
+            style={{ backgroundColor: preferences.accentColor }}
           >
             <Plus size={18} />
             Add Item
@@ -58,9 +61,9 @@ const PantryView: React.FC<PantryViewProps> = memo(({
               onClick={() => toggleCategoryCollapse(category)}
               className="flex items-center justify-between w-full text-left group"
             >
-              <h3 className={`text-[10px] font-bold uppercase tracking-widest ${theme === 'dark' ? 'text-zinc-500' : 'text-black'}`}>{category} ({items.length})</h3>
+              <h3 className={`text-[10px] font-bold uppercase tracking-widest ${theme === 'dark' ? 'text-zinc-500' : 'text-zinc-400'}`}>{category} ({items.length})</h3>
               <div className={`h-px flex-1 mx-4 transition-colors ${theme === 'dark' ? 'bg-zinc-800 group-hover:bg-complementary/30' : 'bg-zinc-200 group-hover:bg-complementary/20'}`}></div>
-              {collapsedCategories.includes(category) ? <ChevronDown size={14} className={theme === 'dark' ? 'text-zinc-500' : 'text-black'} /> : <ChevronUp size={14} className={theme === 'dark' ? 'text-zinc-500' : 'text-black'} />}
+              {collapsedCategories.includes(category) ? <ChevronDown size={14} className={theme === 'dark' ? 'text-zinc-500' : 'text-zinc-400'} /> : <ChevronUp size={14} className={theme === 'dark' ? 'text-zinc-500' : 'text-zinc-400'} />}
             </button>
             
             {!collapsedCategories.includes(category) && (
@@ -75,14 +78,14 @@ const PantryView: React.FC<PantryViewProps> = memo(({
                       {item.isLeftover && <div className="w-2 h-2 bg-amber-500 rounded-full"></div>}
                       <div>
                         <h4 className={`font-semibold ${theme === 'dark' ? 'text-zinc-100' : 'text-black'}`}>{item.name}</h4>
-                        <p className={`text-xs font-medium ${theme === 'dark' ? 'text-zinc-500' : 'text-black'}`}>{item.quantity}</p>
+                        <p className={`text-xs font-medium ${theme === 'dark' ? 'text-zinc-500' : 'text-zinc-600'}`}>{item.quantity}</p>
                       </div>
                     </div>
                     <div className="text-right">
                       <p className="text-xs font-bold text-complementary">
                         <span className={theme === 'dark' ? 'text-complementary' : 'text-black'}>{item.calories || 0} kcal</span>
                       </p>
-                      <p className={`text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-opacity ${theme === 'dark' ? 'text-zinc-500' : 'text-black'}`}>Edit</p>
+                      <p className={`text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-opacity ${theme === 'dark' ? 'text-zinc-500' : 'text-zinc-400'}`}>Edit</p>
                     </div>
                   </div>
                 ))}

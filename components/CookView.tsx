@@ -52,8 +52,8 @@ const CookView: React.FC<CookViewProps> = memo(({
           </div>
 
           <div className="space-y-6">
-            <div className="flex items-center justify-between gap-6 p-4 rounded-2xl border border-zinc-100/10 bg-zinc-500/5">
-              <label className={`text-sm font-bold uppercase tracking-widest leading-tight flex-1 ${theme === 'dark' ? 'text-zinc-500' : 'text-black'}`}>
+            <div className={`flex items-center justify-between gap-6 p-4 rounded-2xl border ${theme === 'dark' ? 'border-zinc-100/10 bg-zinc-500/5' : 'border-zinc-200 bg-zinc-50'}`}>
+              <label className={`text-sm font-bold uppercase tracking-widest leading-tight flex-1 ${theme === 'dark' ? 'text-zinc-500' : 'text-zinc-600'}`}>
                 How many people are you cooking for?
               </label>
               <div className="relative group h-32 w-20 shrink-0">
@@ -110,7 +110,7 @@ const CookView: React.FC<CookViewProps> = memo(({
                       }}
                       className={`flex-shrink-0 w-8 h-8 rounded-lg font-bold border transition-all snap-center flex items-center justify-center text-sm ${mealGenParams.peopleCount === num 
                         ? `scale-125 z-10 shadow-lg` 
-                        : theme === 'dark' ? 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:text-zinc-300' : 'bg-white border-zinc-200 text-black'}`}
+                        : theme === 'dark' ? 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:text-zinc-300' : 'bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-50'}`}
                       style={mealGenParams.peopleCount === num ? { 
                         backgroundColor: preferences.accentColor,
                         borderColor: preferences.accentColor,
@@ -131,15 +131,15 @@ const CookView: React.FC<CookViewProps> = memo(({
             </div>
 
             <div className="space-y-4">
-              <label className={`text-xs font-bold uppercase tracking-widest ${theme === 'dark' ? 'text-zinc-500' : 'text-black'}`}>What is the purpose of this meal?</label>
+              <label className={`text-xs font-bold uppercase tracking-widest ${theme === 'dark' ? 'text-zinc-500' : 'text-zinc-400'}`}>What is the purpose of this meal?</label>
               <div className="grid grid-cols-2 gap-3">
                 {(['protein', 'casual', 'healthy', 'quick'] as const).map(p => (
                   <button
                     key={p}
                     onClick={() => setMealGenParams({...mealGenParams, purpose: p})}
                     className={`py-4 rounded-2xl font-bold border transition-all capitalize ${mealGenParams.purpose === p 
-                      ? `bg-accent border-accent ${theme === 'dark' ? 'text-white' : 'text-black'}` 
-                      : theme === 'dark' ? 'bg-zinc-900 border-zinc-800 text-zinc-500' : 'bg-white border-zinc-200 text-black'}`}
+                      ? `bg-accent border-accent ${theme === 'light' ? 'text-black outline outline-2 outline-black outline-offset-2' : 'text-white'}` 
+                      : theme === 'dark' ? 'bg-zinc-900 border-zinc-800 text-zinc-500' : 'bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-50'}`}
                   >
                     {p}
                   </button>
@@ -149,7 +149,7 @@ const CookView: React.FC<CookViewProps> = memo(({
 
             <button 
               onClick={() => setMealGenStep(1)}
-              className="w-full py-4 bg-accent text-white font-bold rounded-2xl hover:opacity-90 transition-colors shadow-lg shadow-accent/20"
+              className={`w-full py-4 bg-accent font-bold rounded-2xl hover:opacity-90 transition-colors shadow-lg shadow-accent/20 ${theme === 'light' ? 'text-black' : 'text-white'}`}
             >
               Next Step
             </button>
@@ -161,7 +161,7 @@ const CookView: React.FC<CookViewProps> = memo(({
         <div className="space-y-8 py-4">
           <div className="space-y-6">
             <div className="space-y-4">
-              <label className={`text-xs font-bold uppercase tracking-widest ${theme === 'dark' ? 'text-zinc-500' : 'text-black'}`}>Which meal type(s)?</label>
+              <label className={`text-xs font-bold uppercase tracking-widest ${theme === 'dark' ? 'text-zinc-500' : 'text-zinc-400'}`}>Which meal type(s)?</label>
               <div className="grid grid-cols-2 gap-3">
                 {(['Breakfast', 'Lunch', 'Dinner', 'Snack'] as const).map(type => (
                   <button
@@ -174,8 +174,8 @@ const CookView: React.FC<CookViewProps> = memo(({
                       setMealGenParams({...mealGenParams, mealTypes: next});
                     }}
                     className={`py-4 rounded-2xl font-bold border transition-all ${mealGenParams.mealTypes.includes(type) 
-                      ? 'bg-accent border-accent text-white' 
-                      : theme === 'dark' ? 'bg-zinc-900 border-zinc-800 text-zinc-500' : 'bg-white border-zinc-200 text-black'}`}
+                      ? `bg-accent border-accent ${theme === 'light' ? 'text-black outline outline-2 outline-black outline-offset-2' : 'text-white'}` 
+                      : theme === 'dark' ? 'bg-zinc-900 border-zinc-800 text-zinc-500' : 'bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-50'}`}
                   >
                     {type}
                   </button>
@@ -184,15 +184,15 @@ const CookView: React.FC<CookViewProps> = memo(({
             </div>
 
             <div className="space-y-4">
-              <label className={`text-xs font-bold uppercase tracking-widest ${theme === 'dark' ? 'text-zinc-500' : 'text-black'}`}>How much time do you have?</label>
+              <label className={`text-xs font-bold uppercase tracking-widest ${theme === 'dark' ? 'text-zinc-500' : 'text-zinc-400'}`}>How much time do you have?</label>
               <div className="grid grid-cols-3 gap-3">
                 {[15, 30, 60].map(time => (
                   <button
                     key={time}
                     onClick={() => setMealGenParams({...mealGenParams, maxTime: time})}
                     className={`py-4 rounded-2xl font-bold border transition-all ${mealGenParams.maxTime === time 
-                      ? 'bg-accent border-accent text-white' 
-                      : theme === 'dark' ? 'bg-zinc-900 border-zinc-800 text-zinc-400' : 'bg-white border-zinc-200 text-black'}`}
+                      ? `bg-accent border-accent ${theme === 'light' ? 'text-black outline outline-2 outline-black outline-offset-2' : 'text-white'}` 
+                      : theme === 'dark' ? 'bg-zinc-900 border-zinc-800 text-zinc-400' : 'bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-50'}`}
                   >
                     {time}m
                   </button>
@@ -203,13 +203,13 @@ const CookView: React.FC<CookViewProps> = memo(({
             <div className="flex gap-3">
               <button 
                 onClick={() => setMealGenStep(0)}
-                className={`flex-1 py-4 font-bold rounded-2xl border transition-all ${theme === 'dark' ? 'bg-zinc-900 border-zinc-800 text-zinc-400' : 'bg-white border-zinc-200 text-black'}`}
+                className={`flex-1 py-4 font-bold rounded-2xl border transition-all ${theme === 'dark' ? 'bg-zinc-900 border-zinc-800 text-zinc-400' : 'bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-50'}`}
               >
                 Back
               </button>
               <button 
                 onClick={() => setMealGenStep(2)}
-                className="flex-[2] py-4 bg-accent text-white font-bold rounded-2xl hover:opacity-90 transition-colors shadow-lg shadow-accent/20"
+                className={`flex-[2] py-4 bg-accent font-bold rounded-2xl hover:opacity-90 transition-colors shadow-lg shadow-accent/20 ${theme === 'light' ? 'text-black' : 'text-white'}`}
               >
                 Next Step
               </button>
@@ -222,15 +222,15 @@ const CookView: React.FC<CookViewProps> = memo(({
         <div className="space-y-8 py-4">
           <div className="space-y-6">
             <div className="space-y-4">
-              <label className={`text-xs font-bold uppercase tracking-widest ${theme === 'dark' ? 'text-zinc-500' : 'text-black'}`}>Complexity level?</label>
+              <label className={`text-xs font-bold uppercase tracking-widest ${theme === 'dark' ? 'text-zinc-500' : 'text-zinc-400'}`}>Complexity level?</label>
               <div className="grid grid-cols-3 gap-3">
                 {(['simple', 'moderate', 'advanced'] as const).map(c => (
                   <button
                     key={c}
                     onClick={() => setMealGenParams({...mealGenParams, complexity: c})}
                     className={`py-4 rounded-2xl font-bold border transition-all capitalize ${mealGenParams.complexity === c 
-                      ? 'bg-accent border-accent text-white' 
-                      : theme === 'dark' ? 'bg-zinc-900 border-zinc-800 text-zinc-400' : 'bg-white border-zinc-200 text-black'}`}
+                      ? `bg-accent border-accent ${theme === 'light' ? 'text-black outline outline-2 outline-black outline-offset-2' : 'text-white'}` 
+                      : theme === 'dark' ? 'bg-zinc-900 border-zinc-800 text-zinc-400' : 'bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-50'}`}
                   >
                     {c}
                   </button>
@@ -239,7 +239,7 @@ const CookView: React.FC<CookViewProps> = memo(({
             </div>
 
             <div className="space-y-4">
-              <label className={`text-xs font-bold uppercase tracking-widest ${theme === 'dark' ? 'text-zinc-500' : 'text-black'}`}>Preferred cooking method?</label>
+              <label className={`text-xs font-bold uppercase tracking-widest ${theme === 'dark' ? 'text-zinc-500' : 'text-zinc-400'}`}>Preferred cooking method?</label>
               <div className="grid grid-cols-2 gap-3">
                 {[
                   { id: 'stovetop', label: 'Stovetop' },
@@ -252,8 +252,8 @@ const CookView: React.FC<CookViewProps> = memo(({
                     key={method.id}
                     onClick={() => setMealGenParams({...mealGenParams, cookingMethod: method.id as any})}
                     className={`py-4 rounded-2xl font-bold border transition-all ${mealGenParams.cookingMethod === method.id 
-                      ? 'bg-accent border-accent text-white' 
-                      : theme === 'dark' ? 'bg-zinc-900 border-zinc-800 text-zinc-400' : 'bg-white border-zinc-200 text-black'}`}
+                      ? `bg-accent border-accent ${theme === 'light' ? 'text-black outline outline-2 outline-black outline-offset-2' : 'text-white'}` 
+                      : theme === 'dark' ? 'bg-zinc-900 border-zinc-800 text-zinc-400' : 'bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-50'}`}
                   >
                     {method.label}
                   </button>
@@ -264,14 +264,14 @@ const CookView: React.FC<CookViewProps> = memo(({
             <div className="flex gap-3">
               <button 
                 onClick={() => setMealGenStep(1)}
-                className={`flex-1 py-4 font-bold rounded-2xl border transition-all ${theme === 'dark' ? 'bg-zinc-900 border-zinc-800 text-zinc-400' : 'bg-white border-zinc-200 text-black'}`}
+                className={`flex-1 py-4 font-bold rounded-2xl border transition-all ${theme === 'dark' ? 'bg-zinc-900 border-zinc-800 text-zinc-400' : 'bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-50'}`}
               >
                 Back
               </button>
               <button 
                 onClick={handleGenerateSingleMeal}
                 disabled={isPlanLoading}
-                className="flex-[2] py-4 bg-accent text-white font-bold rounded-2xl hover:opacity-90 transition-colors shadow-lg shadow-accent/20 flex items-center justify-center gap-2"
+                className={`flex-[2] py-4 bg-accent font-bold rounded-2xl hover:opacity-90 transition-colors shadow-lg shadow-accent/20 flex items-center justify-center gap-2 ${theme === 'light' ? 'text-black' : 'text-white'}`}
               >
                 {isPlanLoading ? <Loader2 className="animate-spin" size={20} /> : <BarChart3 size={20} />}
                 Generate Meal

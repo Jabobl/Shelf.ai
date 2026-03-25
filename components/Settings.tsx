@@ -2,6 +2,7 @@ import React, { memo } from 'react';
 import { UserPreferences } from '../types';
 import { ChevronLeft, Save, Trash2, Moon, Sun, HelpCircle, CheckCircle2 } from 'lucide-react';
 import { ThemeSwitcher } from './ThemeSwitcher';
+import { SubscriptionStatusCard } from './SubscriptionStatusCard';
 
 interface SettingsProps {
   preferences: UserPreferences;
@@ -11,9 +12,10 @@ interface SettingsProps {
   theme: 'dark' | 'light';
   setTheme: (theme: 'dark' | 'light') => void;
   onHelp: () => void;
+  onUpgrade: () => void;
 }
 
-const Settings = memo(function Settings({ preferences, onSave, onBack, onReset, theme, setTheme, onHelp }: SettingsProps) {
+const Settings = memo(function Settings({ preferences, onSave, onBack, onReset, theme, setTheme, onHelp, onUpgrade }: SettingsProps) {
   const updatePref = <K extends keyof UserPreferences>(key: K, value: UserPreferences[K]) => {
     onSave({ ...preferences, [key]: value });
   };
@@ -49,7 +51,7 @@ const Settings = memo(function Settings({ preferences, onSave, onBack, onReset, 
               }}
               className={`flex items-center justify-center p-3 rounded-xl border transition-all text-xs font-bold ${
                 isSelected 
-                  ? 'bg-accent border-accent text-white' 
+                  ? `bg-accent border-accent ${theme === 'light' ? 'text-black outline outline-2 outline-black' : 'text-white'}` 
                   : theme === 'dark' ? 'bg-zinc-950 border-zinc-800 text-zinc-400' : 'bg-zinc-50 border-zinc-200 text-black'
               }`}
             >
@@ -92,7 +94,7 @@ const Settings = memo(function Settings({ preferences, onSave, onBack, onReset, 
               onClick={() => updatePref(key, opt.value)}
               className={`flex items-center justify-center p-3 rounded-xl border transition-all text-xs font-bold ${
                 isSelected 
-                  ? 'bg-accent border-accent text-white' 
+                  ? `bg-accent border-accent ${theme === 'light' ? 'text-black outline outline-2 outline-black' : 'text-white'}` 
                   : theme === 'dark' ? 'bg-zinc-950 border-zinc-800 text-zinc-400' : 'bg-zinc-50 border-zinc-200 text-black'
               }`}
             >
@@ -125,6 +127,11 @@ const Settings = memo(function Settings({ preferences, onSave, onBack, onReset, 
       </header>
 
       <div className="flex-1 overflow-y-auto p-6 pb-24 custom-scrollbar">
+        <div className="mb-8">
+          <h3 className={`text-xs font-bold uppercase tracking-wider mb-4 px-2 ${theme === 'dark' ? 'text-zinc-500' : 'text-black'}`}>Subscription</h3>
+          <SubscriptionStatusCard theme={theme} onUpgrade={onUpgrade} />
+        </div>
+
         {renderSection("Appearance & Help", (
           <>
             <div className={`flex items-center justify-between p-4 ${theme === 'dark' ? 'bg-zinc-900' : 'bg-white'}`}>
