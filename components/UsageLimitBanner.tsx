@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Sparkles, AlertCircle } from 'lucide-react';
 import { useSubscription } from '../contexts/SubscriptionContext';
 
@@ -7,7 +7,7 @@ interface UsageLimitBannerProps {
   onUpgrade: () => void;
 }
 
-export const UsageLimitBanner: React.FC<UsageLimitBannerProps> = ({ theme, onUpgrade }) => {
+export const UsageLimitBanner: React.FC<UsageLimitBannerProps> = memo(({ theme, onUpgrade }) => {
   const { isSubscribed, remainingFreeRecipes } = useSubscription();
 
   if (isSubscribed) return null;
@@ -45,4 +45,4 @@ export const UsageLimitBanner: React.FC<UsageLimitBannerProps> = ({ theme, onUpg
       </div>
     </div>
   );
-};
+});

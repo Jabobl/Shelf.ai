@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Sun, Moon } from 'lucide-react';
 import { motion } from 'motion/react';
 
@@ -8,7 +8,7 @@ interface ThemeSwitcherProps {
   accentColor?: string;
 }
 
-export const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({ theme, setTheme, accentColor }) => {
+export const ThemeSwitcher: React.FC<ThemeSwitcherProps> = memo(({ theme, setTheme, accentColor }) => {
   return (
     <button
       type="button"
@@ -119,4 +119,4 @@ export const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({ theme, setTheme, a
       </motion.div>
     </button>
   );
-};
+});

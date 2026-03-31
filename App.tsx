@@ -1,21 +1,25 @@
 
-import React, { useState, useEffect, useRef, useMemo, useCallback, memo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback, memo, lazy, Suspense } from 'react';
 import { Home, Refrigerator, Plus, X, Camera, ChevronRight, ChevronLeft, Star, Settings as SettingsIcon, LayoutGrid, BarChart3, Filter, ChevronDown, ChevronUp, Loader2, AlertCircle, Bookmark, BookmarkCheck } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { EditItemModal, FilterSortModal, LeftoversModal } from './components/PantryModals';
 import { RecipeStep } from './components/RecipeStep';
 import { PantryItem, Meal, TabType, UserPreferences, DEFAULT_PREFERENCES, SortOption, FilterCriteria, MealGenerationParams } from './types';
 import { gemini } from './services/geminiService';
 import { useSubscription } from './contexts/SubscriptionContext';
-import { PaywallModal } from './components/PaywallModal';
 import { UsageLimitBanner } from './components/UsageLimitBanner';
-import Onboarding from './components/Onboarding';
-import Settings from './components/Settings';
-import AddItemModal from './components/AddItemModal';
 import HomeView from './components/HomeView';
 import PantryView from './components/PantryView';
 import CookView from './components/CookView';
-import HelpView from './components/HelpView';
+
+// Lazy loaded components
+const Onboarding = lazy(() => import('./components/Onboarding'));
+const Settings = lazy(() => import('./components/Settings'));
+const HelpView = lazy(() => import('./components/HelpView'));
+const AddItemModal = lazy(() => import('./components/AddItemModal'));
+const PaywallModal = lazy(() => import('./components/PaywallModal'));
+const EditItemModal = lazy(() => import('./components/PantryModals').then(m => ({ default: m.EditItemModal })));
+const FilterSortModal = lazy(() => import('./components/PantryModals').then(m => ({ default: m.FilterSortModal })));
+const LeftoversModal = lazy(() => import('./components/PantryModals').then(m => ({ default: m.LeftoversModal })));
 
 // --- Mock Initial Data (Empty by default as per rules) ---
 const INITIAL_PANTRY: PantryItem[] = [];
@@ -203,36 +207,40 @@ export default function App() {
     }
   }, [activeTab, handleTabChange]);
 
-  // Persistence
+  // Persistence: Initial Load
   useEffect(() => {
-    const savedPantry = localStorage.getItem('shelf_pantry');
-    const savedMeals = localStorage.getItem('shelf_generated_meals');
-    const savedHistory = localStorage.getItem('shelf_meal_history');
-    const savedSavedRecipes = localStorage.getItem('shelf_saved_recipes');
-    const savedPrefs = localStorage.getItem('shelf_preferences');
-    const savedTheme = localStorage.getItem('shelf_theme');
-    const onboardingDone = localStorage.getItem('shelf_onboarding_done');
-    const savedActiveTab = localStorage.getItem('shelf_active_tab');
-    const savedMealGenParams = localStorage.getItem('shelf_meal_gen_params');
-    const savedSortOption = localStorage.getItem('shelf_sort_option');
-    const savedFilterCriteria = localStorage.getItem('shelf_filter_criteria');
-    const savedCollapsedCategories = localStorage.getItem('shelf_collapsed_categories');
-    const savedMealGenStep = localStorage.getItem('shelf_meal_gen_step');
+    const loadData = () => {
+      const savedPantry = localStorage.getItem('shelf_pantry');
+      const savedMeals = localStorage.getItem('shelf_generated_meals');
+      const savedHistory = localStorage.getItem('shelf_meal_history');
+      const savedSavedRecipes = localStorage.getItem('shelf_saved_recipes');
+      const savedPrefs = localStorage.getItem('shelf_preferences');
+      const savedTheme = localStorage.getItem('shelf_theme');
+      const onboardingDone = localStorage.getItem('shelf_onboarding_done');
+      const savedActiveTab = localStorage.getItem('shelf_active_tab');
+      const savedMealGenParams = localStorage.getItem('shelf_meal_gen_params');
+      const savedSortOption = localStorage.getItem('shelf_sort_option');
+      const savedFilterCriteria = localStorage.getItem('shelf_filter_criteria');
+      const savedCollapsedCategories = localStorage.getItem('shelf_collapsed_categories');
+      const savedMealGenStep = localStorage.getItem('shelf_meal_gen_step');
 
-    if (savedPantry) setPantry(JSON.parse(savedPantry));
-    if (savedMeals) setGeneratedMeals(JSON.parse(savedMeals));
-    if (savedHistory) setMealHistory(JSON.parse(savedHistory));
-    if (savedSavedRecipes) setSavedRecipes(JSON.parse(savedSavedRecipes));
-    if (savedPrefs) setPreferences(JSON.parse(savedPrefs));
-    if (savedTheme) setTheme(savedTheme as 'dark' | 'light');
-    if (savedActiveTab) setActiveTab(savedActiveTab as TabType);
-    if (savedMealGenParams) setMealGenParams(JSON.parse(savedMealGenParams));
-    if (savedSortOption) setSortOption(savedSortOption as SortOption);
-    if (savedFilterCriteria) setFilterCriteria(JSON.parse(savedFilterCriteria));
-    if (savedCollapsedCategories) setCollapsedCategories(JSON.parse(savedCollapsedCategories));
-    if (savedMealGenStep) setMealGenStep(parseInt(savedMealGenStep));
-    
-    setHasCompletedOnboarding(onboardingDone === 'true');
+      if (savedPantry) setPantry(JSON.parse(savedPantry));
+      if (savedMeals) setGeneratedMeals(JSON.parse(savedMeals));
+      if (savedHistory) setMealHistory(JSON.parse(savedHistory));
+      if (savedSavedRecipes) setSavedRecipes(JSON.parse(savedSavedRecipes));
+      if (savedPrefs) setPreferences(JSON.parse(savedPrefs));
+      if (savedTheme) setTheme(savedTheme as 'dark' | 'light');
+      if (savedActiveTab) setActiveTab(savedActiveTab as TabType);
+      if (savedMealGenParams) setMealGenParams(JSON.parse(savedMealGenParams));
+      if (savedSortOption) setSortOption(savedSortOption as SortOption);
+      if (savedFilterCriteria) setFilterCriteria(JSON.parse(savedFilterCriteria));
+      if (savedCollapsedCategories) setCollapsedCategories(JSON.parse(savedCollapsedCategories));
+      if (savedMealGenStep) setMealGenStep(parseInt(savedMealGenStep));
+      
+      setHasCompletedOnboarding(onboardingDone === 'true');
+    };
+
+    loadData();
 
     const checkApiKey = async () => {
       if (window.aistudio) {
@@ -245,53 +253,21 @@ export default function App() {
     checkApiKey();
   }, []);
 
+  // Persistence: Save Data
   useEffect(() => {
     localStorage.setItem('shelf_pantry', JSON.stringify(pantry));
-  }, [pantry]);
-
-  useEffect(() => {
     localStorage.setItem('shelf_generated_meals', JSON.stringify(generatedMeals));
-  }, [generatedMeals]);
-
-  useEffect(() => {
     localStorage.setItem('shelf_meal_history', JSON.stringify(mealHistory));
-  }, [mealHistory]);
-
-  useEffect(() => {
     localStorage.setItem('shelf_saved_recipes', JSON.stringify(savedRecipes));
-  }, [savedRecipes]);
-
-  useEffect(() => {
     localStorage.setItem('shelf_preferences', JSON.stringify(preferences));
-  }, [preferences]);
-
-  useEffect(() => {
     localStorage.setItem('shelf_theme', theme);
-  }, [theme]);
-
-  useEffect(() => {
     localStorage.setItem('shelf_active_tab', activeTab);
-  }, [activeTab]);
-
-  useEffect(() => {
     localStorage.setItem('shelf_meal_gen_params', JSON.stringify(mealGenParams));
-  }, [mealGenParams]);
-
-  useEffect(() => {
     localStorage.setItem('shelf_sort_option', sortOption);
-  }, [sortOption]);
-
-  useEffect(() => {
     localStorage.setItem('shelf_filter_criteria', JSON.stringify(filterCriteria));
-  }, [filterCriteria]);
-
-  useEffect(() => {
     localStorage.setItem('shelf_collapsed_categories', JSON.stringify(collapsedCategories));
-  }, [collapsedCategories]);
-
-  useEffect(() => {
     localStorage.setItem('shelf_meal_gen_step', mealGenStep.toString());
-  }, [mealGenStep]);
+  }, [pantry, generatedMeals, mealHistory, savedRecipes, preferences, theme, activeTab, mealGenParams, sortOption, filterCriteria, collapsedCategories, mealGenStep]);
 
   useEffect(() => {
     document.documentElement.style.setProperty('--accent-color', preferences.accentColor);
@@ -522,7 +498,11 @@ export default function App() {
   }
 
   if (hasCompletedOnboarding === false) {
-    return <Onboarding onComplete={handleOnboardingComplete} onSkipAll={handleSkipAll} theme={theme} />;
+    return (
+      <Suspense fallback={<div className="min-h-screen bg-black flex items-center justify-center"><Loader2 className="w-12 h-12 text-[#F27D26] animate-spin" /></div>}>
+        <Onboarding onComplete={handleOnboardingComplete} onSkipAll={handleSkipAll} theme={theme} />
+      </Suspense>
+    );
   }
 
   return (
@@ -566,78 +546,80 @@ export default function App() {
             }}
             className="absolute inset-0 overflow-y-auto pb-24 px-0"
           >
-            {activeTab === 'settings' && (
-              <Settings 
-                preferences={preferences} 
-                onSave={setPreferences} 
-                onBack={() => handleTabChange('home')} 
-                onReset={handleResetPreferences}
-                theme={theme}
-                setTheme={setTheme}
-                onHelp={() => handleTabChange('help')}
-                onUpgrade={() => setIsPaywallOpen(true)}
-              />
-            )}
-            {activeTab === 'home' && (
-              <>
-                {!isSubscribed && <UsageLimitBanner theme={theme} onUpgrade={() => setIsPaywallOpen(true)} />}
-                <HomeView 
+            <Suspense fallback={<div className="flex items-center justify-center p-12"><Loader2 className="w-8 h-8 text-accent animate-spin" /></div>}>
+              {activeTab === 'settings' && (
+                <Settings 
+                  preferences={preferences} 
+                  onSave={setPreferences} 
+                  onBack={() => handleTabChange('home')} 
+                  onReset={handleResetPreferences}
                   theme={theme}
-                  generatedMeals={generatedMeals}
-                  savedRecipes={savedRecipes}
-                  pantryCount={pantry.length}
-                  weeklyHistory={weeklyHistory}
-                  weeklyStats={weeklyStats}
-                  setActiveTab={handleTabChange}
-                  setSelectedMeal={setSelectedMeal}
+                  setTheme={setTheme}
+                  onHelp={() => handleTabChange('help')}
+                  onUpgrade={() => setIsPaywallOpen(true)}
                 />
-              </>
-            )}
+              )}
+              {activeTab === 'home' && (
+                <>
+                  {!isSubscribed && <UsageLimitBanner theme={theme} onUpgrade={() => setIsPaywallOpen(true)} />}
+                  <HomeView 
+                    theme={theme}
+                    generatedMeals={generatedMeals}
+                    savedRecipes={savedRecipes}
+                    pantryCount={pantry.length}
+                    weeklyHistory={weeklyHistory}
+                    weeklyStats={weeklyStats}
+                    setActiveTab={handleTabChange}
+                    setSelectedMeal={setSelectedMeal}
+                  />
+                </>
+              )}
 
-            {activeTab === 'pantry' && (
-              <PantryView 
-                theme={theme}
-                preferences={preferences}
-                isScanning={isScanning}
-                groupedPantry={groupedPantry}
-                collapsedCategories={collapsedCategories}
-                setIsFilterModalOpen={setIsFilterModalOpen}
-                setIsAddItemModalOpen={setIsAddItemModalOpen}
-                toggleCategoryCollapse={toggleCategoryCollapse}
-                setEditingItem={setEditingItem}
-              />
-            )}
-
-            {activeTab === 'cook' && (
-              <>
-                {!isSubscribed && <UsageLimitBanner theme={theme} onUpgrade={() => setIsPaywallOpen(true)} />}
-                <CookView 
+              {activeTab === 'pantry' && (
+                <PantryView 
                   theme={theme}
                   preferences={preferences}
-                  mealGenStep={mealGenStep}
-                  mealGenParams={mealGenParams}
-                  isPlanLoading={isPlanLoading}
-                  generatedMeals={generatedMeals}
-                  setMealGenStep={setMealGenStep}
-                  setMealGenParams={setMealGenParams}
-                  handleGenerateSingleMeal={handleGenerateSingleMeal}
-                  setSelectedMeal={setSelectedMeal}
-                  dialRef={dialRef}
-                  handleMouseDown={handleMouseDown}
-                  handleMouseLeave={handleMouseLeave}
-                  handleMouseUp={handleMouseUp}
-                  handleMouseMove={handleMouseMove}
-                  setIsTabDragDisabled={setIsTabDragDisabled}
+                  isScanning={isScanning}
+                  groupedPantry={groupedPantry}
+                  collapsedCategories={collapsedCategories}
+                  setIsFilterModalOpen={setIsFilterModalOpen}
+                  setIsAddItemModalOpen={setIsAddItemModalOpen}
+                  toggleCategoryCollapse={toggleCategoryCollapse}
+                  setEditingItem={setEditingItem}
                 />
-              </>
-            )}
+              )}
 
-            {activeTab === 'help' && (
-              <HelpView 
-                theme={theme}
-                setActiveTab={handleTabChange}
-              />
-            )}
+              {activeTab === 'cook' && (
+                <>
+                  {!isSubscribed && <UsageLimitBanner theme={theme} onUpgrade={() => setIsPaywallOpen(true)} />}
+                  <CookView 
+                    theme={theme}
+                    preferences={preferences}
+                    mealGenStep={mealGenStep}
+                    mealGenParams={mealGenParams}
+                    isPlanLoading={isPlanLoading}
+                    generatedMeals={generatedMeals}
+                    setMealGenStep={setMealGenStep}
+                    setMealGenParams={setMealGenParams}
+                    handleGenerateSingleMeal={handleGenerateSingleMeal}
+                    setSelectedMeal={setSelectedMeal}
+                    dialRef={dialRef}
+                    handleMouseDown={handleMouseDown}
+                    handleMouseLeave={handleMouseLeave}
+                    handleMouseUp={handleMouseUp}
+                    handleMouseMove={handleMouseMove}
+                    setIsTabDragDisabled={setIsTabDragDisabled}
+                  />
+                </>
+              )}
+
+              {activeTab === 'help' && (
+                <HelpView 
+                  theme={theme}
+                  setActiveTab={handleTabChange}
+                />
+              )}
+            </Suspense>
           </motion.div>
         </AnimatePresence>
       </main>
@@ -673,18 +655,50 @@ export default function App() {
         <NavButton active={activeTab === 'settings'} icon={<SettingsIcon size={22} />} label="Settings" onClick={() => handleTabChange('settings')} />
       </motion.nav>
 
-      {/* Settings Modal (Pop up) - Removed as it's now a tab */}
+      {/* Modals */}
+      <Suspense fallback={null}>
+        <AddItemModal 
+          isOpen={isAddItemModalOpen}
+          onClose={() => setIsAddItemModalOpen(false)}
+          onAddManual={handleManualAdd}
+          onScanImage={handleFileUpload}
+          isScanning={isScanning}
+          isResearching={isResearching}
+          theme={theme}
+        />
 
-      {/* Add Item Modal */}
-      <AddItemModal 
-        isOpen={isAddItemModalOpen}
-        onClose={() => setIsAddItemModalOpen(false)}
-        onAddManual={handleManualAdd}
-        onScanImage={handleFileUpload}
-        isScanning={isScanning}
-        isResearching={isResearching}
-        theme={theme}
-      />
+        <EditItemModal 
+          isOpen={!!editingItem}
+          onClose={() => setEditingItem(null)}
+          item={editingItem}
+          onSave={handleSaveItem}
+          onDelete={handleDeleteItem}
+          theme={theme}
+        />
+
+        <FilterSortModal 
+          isOpen={isFilterModalOpen}
+          onClose={() => setIsFilterModalOpen(false)}
+          sortOption={sortOption}
+          onSortChange={setSortOption}
+          filterCriteria={filterCriteria}
+          onFilterChange={setFilterCriteria}
+          theme={theme}
+        />
+
+        <PaywallModal 
+          isOpen={isPaywallOpen}
+          onClose={() => setIsPaywallOpen(false)}
+          theme={theme}
+        />
+
+        <LeftoversModal 
+          isOpen={leftoversToIdentify.length > 0}
+          onClose={() => setLeftoversToIdentify(prev => prev.slice(1))}
+          onConfirm={handleLeftoversConfirm}
+          theme={theme}
+        />
+      </Suspense>
 
       {/* Pantry Error Modal */}
       {pantryError && (
@@ -708,39 +722,6 @@ export default function App() {
           </div>
         </div>
       )}
-
-      {/* Pantry Enhancements Modals */}
-      <EditItemModal 
-        isOpen={!!editingItem}
-        onClose={() => setEditingItem(null)}
-        item={editingItem}
-        onSave={handleSaveItem}
-        onDelete={handleDeleteItem}
-        theme={theme}
-      />
-
-      <FilterSortModal 
-        isOpen={isFilterModalOpen}
-        onClose={() => setIsFilterModalOpen(false)}
-        sortOption={sortOption}
-        onSortChange={setSortOption}
-        filterCriteria={filterCriteria}
-        onFilterChange={setFilterCriteria}
-        theme={theme}
-      />
-
-      <PaywallModal 
-        isOpen={isPaywallOpen}
-        onClose={() => setIsPaywallOpen(false)}
-        theme={theme}
-      />
-
-      <LeftoversModal 
-        isOpen={leftoversToIdentify.length > 0}
-        onClose={() => setLeftoversToIdentify(prev => prev.slice(1))}
-        onConfirm={handleLeftoversConfirm}
-        theme={theme}
-      />
 
       {/* Recipe Modal */}
       {selectedMeal && (
