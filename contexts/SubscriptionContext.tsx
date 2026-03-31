@@ -9,7 +9,7 @@ interface SubscriptionContextType extends SubscriptionState {
   login: () => Promise<void>;
   logout: () => Promise<void>;
   startSubscription: (priceId: string) => Promise<void>;
-  cancelSubscription: () => void;
+  manageSubscription: () => Promise<void>;
   isSubscriptionActive: () => boolean;
   incrementUsage: () => Promise<void>;
   canGenerateRecipe: () => boolean;
@@ -139,22 +139,40 @@ export const SubscriptionProvider: React.FC<{ children: ReactNode }> = ({ childr
       return;
     }
 
+    // Fallback: If a direct payment link is provided, use it.
+    const DIRECT_LINK = import.meta.env.VITE_STRIPE_PAYMENT_LINK || 'https://buy.stripe.com/test_dRm5kC0Mjd3A2b01lC4ko00';
+    if (DIRECT_LINK) {
+      window.location.href = DIRECT_LINK;
+      return;
+    }
+
     try {
       const checkoutSessionsRef = collection(db, 'users', user.uid, 'checkout_sessions');
       const docRef = await addDoc(checkoutSessionsRef, {
         price: priceId,
-        success_url: window.location.origin,
-        cancel_url: window.location.origin,
+        success_url: window.location.href, // Return to current page
+        cancel_url: window.location.href,
       });
 
       // Wait for the extension to create the checkout session
-      onSnapshot(docRef, (snap) => {
+      const timeout = setTimeout(() => {
+        unsubscribe();
+        console.warn("Stripe extension timeout: No checkout URL generated within 10s.");
+        alert("The Stripe extension is taking too long to respond. Please ensure it's installed and configured in your Firebase console, and that your project is on the 'Blaze' plan.");
+      }, 10000);
+
+      const unsubscribe = onSnapshot(docRef, (snap) => {
         const { url, error } = snap.data() || {};
         if (url) {
+          clearTimeout(timeout);
+          unsubscribe();
           window.location.assign(url);
         }
         if (error) {
+          clearTimeout(timeout);
+          unsubscribe();
           console.error(`Stripe Error: ${error.message}`);
+          alert(`Subscription Error: ${error.message}`);
         }
       });
     } catch (error) {
@@ -162,10 +180,30 @@ export const SubscriptionProvider: React.FC<{ children: ReactNode }> = ({ childr
     }
   };
 
-  const cancelSubscription = () => {
-    // In a real Stripe extension setup, users manage this via the Stripe Customer Portal
-    // For now, we'll just point them to the portal or show a message
-    window.open('https://billing.stripe.com/p/login/test_your_portal_link', '_blank');
+  const manageSubscription = async () => {
+    if (!user) return;
+    
+    try {
+      const portalSessionsRef = collection(db, 'users', user.uid, 'portal_sessions');
+      const docRef = await addDoc(portalSessionsRef, {
+        return_url: window.location.href,
+      });
+
+      const unsubscribe = onSnapshot(docRef, (snap) => {
+        const { url, error } = snap.data() || {};
+        if (url) {
+          unsubscribe();
+          window.location.assign(url);
+        }
+        if (error) {
+          unsubscribe();
+          console.error(`Stripe Portal Error: ${error.message}`);
+          alert(`Portal Error: ${error.message}`);
+        }
+      });
+    } catch (error) {
+      console.error('Portal error:', error);
+    }
   };
 
   const incrementUsage = async () => {
@@ -196,7 +234,7 @@ export const SubscriptionProvider: React.FC<{ children: ReactNode }> = ({ childr
         login,
         logout,
         startSubscription,
-        cancelSubscription,
+        manageSubscription,
         isSubscriptionActive,
         incrementUsage,
         canGenerateRecipe,

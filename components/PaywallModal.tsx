@@ -18,10 +18,11 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({ isOpen, onClose, the
       await login();
       return;
     }
+
     setIsSubscribing(true);
     try {
       // Replace with your actual Stripe Price ID from the Firebase console
-      const PRICE_ID = 'price_1234567890'; 
+      const PRICE_ID = import.meta.env.VITE_STRIPE_PRICE_ID || 'price_1234567890'; 
       await startSubscription(PRICE_ID);
       // The user will be redirected to Stripe Checkout
     } catch (error) {

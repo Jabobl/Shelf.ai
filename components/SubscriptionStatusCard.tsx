@@ -8,7 +8,7 @@ interface SubscriptionStatusCardProps {
 }
 
 export const SubscriptionStatusCard: React.FC<SubscriptionStatusCardProps> = ({ theme, onUpgrade }) => {
-  const { isSubscribed, subscriptionStartDate, subscriptionEndDate, cancelSubscription, user, login, logout, authLoading } = useSubscription();
+  const { isSubscribed, subscriptionStartDate, subscriptionEndDate, manageSubscription, user, login, logout, authLoading } = useSubscription();
 
   const formatDate = (timestamp: number | null) => {
     if (!timestamp) return 'N/A';
@@ -73,7 +73,7 @@ export const SubscriptionStatusCard: React.FC<SubscriptionStatusCardProps> = ({ 
           </p>
           <button
             onClick={onUpgrade}
-            className="w-full py-4 bg-accent font-bold rounded-2xl shadow-lg shadow-accent/20 hover:brightness-110 transition-all flex items-center justify-center gap-2 text-white"
+            className={`w-full py-4 bg-accent font-bold rounded-2xl shadow-lg shadow-accent/20 hover:brightness-110 transition-all flex items-center justify-center gap-2 ${theme === 'light' ? 'text-black' : 'text-white'}`}
           >
             <Sparkles size={18} />
             Upgrade to Pro ($5/month)
@@ -128,7 +128,7 @@ export const SubscriptionStatusCard: React.FC<SubscriptionStatusCardProps> = ({ 
 
         <div className="space-y-3">
           <button
-            onClick={cancelSubscription}
+            onClick={manageSubscription}
             className={`w-full py-4 font-bold rounded-2xl transition-colors border ${theme === 'dark' ? 'bg-zinc-900 border-zinc-800 text-zinc-300 hover:bg-zinc-800' : 'bg-zinc-50 border-zinc-200 text-black hover:bg-zinc-100'}`}
           >
             Manage Subscription

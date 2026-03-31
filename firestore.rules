@@ -22,6 +22,9 @@ service cloud.firestore {
              data.success_url is string &&
              data.cancel_url is string;
     }
+    function isValidPortalSession(data) {
+      return data.return_url is string;
+    }
 
     // ===============================================================
     // Rules
@@ -38,6 +41,11 @@ service cloud.firestore {
 
       match /subscriptions/{id} {
         allow read: if isOwner(userId);
+      }
+
+      match /portal_sessions/{id} {
+        allow read: if isOwner(userId);
+        allow write: if isOwner(userId) && isValidPortalSession(request.resource.data);
       }
     }
 

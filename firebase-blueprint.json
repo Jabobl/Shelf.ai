@@ -37,6 +37,16 @@
         "current_period_end": { "type": "integer" },
         "current_period_start": { "type": "integer" }
       }
+    },
+    "PortalSession": {
+      "title": "Portal Session",
+      "description": "Stripe customer portal session request",
+      "type": "object",
+      "properties": {
+        "return_url": { "type": "string" },
+        "url": { "type": "string" }
+      },
+      "required": ["return_url"]
     }
   },
   "firestore": {
@@ -51,6 +61,10 @@
     "/users/{uid}/subscriptions/{subscriptionId}": {
       "schema": "Subscription",
       "description": "User subscriptions"
+    },
+    "/users/{uid}/portal_sessions/{sessionId}": {
+      "schema": "PortalSession",
+      "description": "Stripe customer portal sessions"
     },
     "/products/{productId}": {
       "schema": "Product",
