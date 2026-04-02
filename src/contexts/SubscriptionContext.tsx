@@ -8,7 +8,7 @@ interface SubscriptionContextType extends SubscriptionState {
   authLoading: boolean;
   login: () => Promise<void>;
   logout: () => Promise<void>;
-  startSubscription: (priceId: string) => Promise<void>;
+  startSubscription: () => Promise<void>;
   manageSubscription: () => Promise<void>;
   isSubscriptionActive: () => boolean;
   incrementUsage: () => Promise<void>;
@@ -36,7 +36,9 @@ export const SubscriptionProvider: React.FC<{ children: ReactNode }> = ({ childr
 
   // Handle Auth State
   useEffect(() => {
+    console.log("SubscriptionContext: Setting up onAuthStateChanged");
     const unsubscribe = onAuthStateChanged(auth, (u) => {
+      console.log("SubscriptionContext: Auth state changed", u?.email);
       setUser(u);
       setAuthLoading(false);
       if (!u) {
@@ -133,50 +135,21 @@ export const SubscriptionProvider: React.FC<{ children: ReactNode }> = ({ childr
     return state.isSubscribed;
   };
 
-  const startSubscription = async (priceId: string) => {
-    if (!user) {
-      await login();
-      return;
-    }
-
-    // Fallback: If a direct payment link is provided, use it.
-    const DIRECT_LINK = import.meta.env.VITE_STRIPE_PAYMENT_LINK || 'https://buy.stripe.com/test_dRm5kC0Mjd3A2b01lC4ko00';
-    if (DIRECT_LINK) {
-      window.location.href = DIRECT_LINK;
-      return;
-    }
-
+  const startSubscription = async () => {
     try {
-      const checkoutSessionsRef = collection(db, 'users', user.uid, 'checkout_sessions');
-      const docRef = await addDoc(checkoutSessionsRef, {
-        price: priceId,
-        success_url: window.location.href, // Return to current page
-        cancel_url: window.location.href,
+      const response = await fetch("https://shelfai-backend.onrender.com/create-checkout-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" }
       });
-
-      // Wait for the extension to create the checkout session
-      const timeout = setTimeout(() => {
-        unsubscribe();
-        console.warn("Stripe extension timeout: No checkout URL generated within 10s.");
-        alert("The Stripe extension is taking too long to respond. Please ensure it's installed and configured in your Firebase console, and that your project is on the 'Blaze' plan.");
-      }, 10000);
-
-      const unsubscribe = onSnapshot(docRef, (snap) => {
-        const { url, error } = snap.data() || {};
-        if (url) {
-          clearTimeout(timeout);
-          unsubscribe();
-          window.location.assign(url);
-        }
-        if (error) {
-          clearTimeout(timeout);
-          unsubscribe();
-          console.error(`Stripe Error: ${error.message}`);
-          alert(`Subscription Error: ${error.message}`);
-        }
-      });
+      const data = await response.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error("No checkout URL returned from server");
+      }
     } catch (error) {
       console.error('Checkout error:', error);
+      alert("Failed to start checkout. Please try again later.");
     }
   };
 

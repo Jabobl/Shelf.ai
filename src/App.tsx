@@ -130,7 +130,7 @@ export default function App() {
   const [isPaywallOpen, setIsPaywallOpen] = useState(false);
 
   // Subscription Hook
-  const { canGenerateRecipe, incrementUsage, authLoading, user, isSubscribed } = useSubscription();
+  const { canGenerateRecipe, incrementUsage, authLoading, user, isSubscribed, startSubscription } = useSubscription();
 
   // Meal Generation Questionnaire State
   const [mealGenStep, setMealGenStep] = useState<number>(0);
@@ -486,11 +486,13 @@ export default function App() {
       }, {} as Record<string, PantryItem[]>);
   }, [pantry, filterCriteria, sortOption]);
 
-  if (authLoading) {
+  console.log("App component rendering", { authLoading, hasCompletedOnboarding });
+
+  if (authLoading || hasCompletedOnboarding === null) {
     return (
-      <div className="min-h-screen bg-[#050505] flex items-center justify-center">
+      <div className="min-h-screen bg-blue-900 flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="w-12 h-12 text-[#F27D26] animate-spin mx-auto mb-4" />
+          <div className="w-12 h-12 border-4 border-[#F27D26] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-white/60 font-medium tracking-wider uppercase text-xs">Initializing Shelf.ai</p>
         </div>
       </div>
@@ -556,12 +558,12 @@ export default function App() {
                   theme={theme}
                   setTheme={setTheme}
                   onHelp={() => handleTabChange('help')}
-                  onUpgrade={() => setIsPaywallOpen(true)}
+                  onUpgrade={startSubscription}
                 />
               )}
               {activeTab === 'home' && (
                 <>
-                  {!isSubscribed && <UsageLimitBanner theme={theme} onUpgrade={() => setIsPaywallOpen(true)} />}
+                  {!isSubscribed && <UsageLimitBanner theme={theme} onUpgrade={startSubscription} />}
                   <HomeView 
                     theme={theme}
                     generatedMeals={generatedMeals}
@@ -570,7 +572,7 @@ export default function App() {
                     weeklyHistory={weeklyHistory}
                     weeklyStats={weeklyStats}
                     setActiveTab={handleTabChange}
-                    setSelectedMeal={setSelectedMeal}
+                    onSelectMeal={setSelectedMeal}
                   />
                 </>
               )}
@@ -591,7 +593,7 @@ export default function App() {
 
               {activeTab === 'cook' && (
                 <>
-                  {!isSubscribed && <UsageLimitBanner theme={theme} onUpgrade={() => setIsPaywallOpen(true)} />}
+                  {!isSubscribed && <UsageLimitBanner theme={theme} onUpgrade={startSubscription} />}
                   <CookView 
                     theme={theme}
                     preferences={preferences}
